@@ -19,7 +19,7 @@ Other distributions and versions will be supported at a later stage!
 
 # Flavors
 
-There are some flavors available (see the podmanfiles/ directory) which mainly destinguish between the base container.
+There are some flavors available (see the dockerfiles/ directory) which mainly destinguish between the base container.
 
 The special tags are described here:
 
