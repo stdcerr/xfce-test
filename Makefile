@@ -25,7 +25,7 @@ check_env:
 
 #use this to compile a git directory you have locally (even maybe modified)
 compile-local: check_env xephyr
-	-docker run --tty --interactive \
+	-podman run --tty --interactive \
               --env DISPLAY=":$(DISPLAY_NUM)" \
               --env SCREENSHOTS=$(SCREENSHOTS) \
               --volume /tmp/.X11-unix:/tmp/.X11-unix --volume $(SRC_DIR):/data \
@@ -34,7 +34,7 @@ compile-local: check_env xephyr
 # see compile-local
 # this starts as root to be able to install stuff with apt
 compile-local-root: check_env xephyr
-	-docker run --tty --interactive --user 0:0 \
+	-podman run --tty --interactive --user 0:0 \
               --name xfce-test \
               --env DISPLAY=":$(DISPLAY_NUM)" \
               --env SCREENSHOTS=$(SCREENSHOTS) \
@@ -45,7 +45,7 @@ test: behave-tests
 
 #only a helper for ubuntu
 setup:
-	sudo apt install -y xserver-xephyr docker.io
+	sudo apt install -y xserver-xephyr podman.io
 	sudo apt install -y xvfb ffmpeg
 
 behave-tests:  test-setup run-behave-tests test-teardown
@@ -56,14 +56,14 @@ xephyr:
 	Xephyr :$(DISPLAY_NUM) -ac -screen $(RESOLUTION) &
 
 pull:
-	docker pull schuellerf/xfce-test
+	podman pull schuellerf/xfce-test
 
 build:
-	docker build --build-arg DOWNLOAD_DATE=$(shell date +%Y%m%d) --tag schuellerf/xfce-test:latest .
+	podman build --build-arg DOWNLOAD_DATE=$(shell date +%Y%m%d) --tag schuellerf/xfce-test:latest .
 
 test-setup: xephyr
-	-docker rm xfce-test
-	-docker run --name xfce-test --detach \
+	-podman rm xfce-test
+	-podman run --name xfce-test --detach \
               --env DISPLAY=":$(DISPLAY_NUM)" \
               --env LDTP_DEBUG=2 \
               --env SCREENSHOTS=$(SCREENSHOTS) \
@@ -72,27 +72,27 @@ test-setup: xephyr
               schuellerf/xfce-test:latest
 
 test-teardown:
-	-docker exec xfce-test xfce4-session-logout --logout
-	-docker stop xfce-test
-	-docker rm xfce-test
-	-docker exec xfce-test-travis xfce4-session-logout --logout
-	-docker stop xfce-test-travis
-	-docker rm xfce-test-travis
+	-podman exec xfce-test xfce4-session-logout --logout
+	-podman stop xfce-test
+	-podman rm xfce-test
+	-podman exec xfce-test-travis xfce4-session-logout --logout
+	-podman stop xfce-test-travis
+	-podman rm xfce-test-travis
 	-killall -q Xephyr
 	-sudo rm -rf /tmp/.X11-unix/X$(DISPLAY_NUM) /tmp/.X$(DISPLAY_NUM)-lock
 
 manual-session: test-setup run-manual-session test-teardown
 
 run-manual-session:
-	-docker exec --tty --interactive xfce-test /bin/bash
+	-podman exec --tty --interactive xfce-test /bin/bash
 
 run-behave-tests:
-	docker exec --tty xfce-test bash -c "cd /data/behave;behave"
-	docker exec --tty xfce-test bash -c "cat ~xfce-test_user/version_info.txt"
+	podman exec --tty xfce-test bash -c "cd /data/behave;behave"
+	podman exec --tty xfce-test bash -c "cat ~xfce-test_user/version_info.txt"
 
 debug-behave-tests:
-	docker exec --tty xfce-test bash -c "cd /data/behave;behave -D DEBUG_ON_ERROR"
-	docker exec --tty xfce-test bash -c "cat ~xfce-test_user/version_info.txt"
+	podman exec --tty xfce-test bash -c "cd /data/behave;behave -D DEBUG_ON_ERROR"
+	podman exec --tty xfce-test bash -c "cat ~xfce-test_user/version_info.txt"
 
 $(FFMPEG_CMD):
 	echo Please install ffmpeg
@@ -103,7 +103,7 @@ $(FFPLAY_CMD):
 
 recording-test: $(FFMPEG_CMD) $(FFPLAY_CMD)
 	Xvfb :99 -ac -screen 0 800x600x24 &
-	docker run --name xfce-test-travis --detach --env DISPLAY=:99.0 --volume /tmp/.X11-unix:/tmp/.X11-unix schuellerf/xfce-test:latest /usr/bin/dbus-run-session /usr/bin/ldtp
+	podman run --name xfce-test-travis --detach --env DISPLAY=:99.0 --volume /tmp/.X11-unix:/tmp/.X11-unix schuellerf/xfce-test:latest /usr/bin/dbus-run-session /usr/bin/ldtp
 	sleep 5
 	echo "Starting testframework..." > text.txt
 ifdef DEBUG
@@ -112,28 +112,28 @@ else
 	ffmpeg -y -r 30 -f x11grab -s 800x600 -i :99.0 -vf "drawtext=fontfile=Vera.ttf:textfile=text.txt:reload=1:fontcolor=white: fontsize=12: box=1: boxcolor=black@0.5:y=500" -c:v libx264 -f mpegts - 2>video_log > video.ts &
 endif
 	sleep 5
-	docker exec --detach xfce-test-travis xfce4-session
-	docker cp behave xfce-test-travis:/tmp
+	podman exec --detach xfce-test-travis xfce4-session
+	podman cp behave xfce-test-travis:/tmp
 	# we need to use the mv command to avoid ffmpeg crashes
-	docker exec xfce-test-travis bash -c "cd /tmp/behave;behave -D DEBUG_ON_ERROR"|while read LINE; do echo "$$LINE" | tee -a text_all.txt; tail -n5 text_all.txt > text_cut.txt;mv text_cut.txt text.txt; done
+	podman exec xfce-test-travis bash -c "cd /tmp/behave;behave -D DEBUG_ON_ERROR"|while read LINE; do echo "$$LINE" | tee -a text_all.txt; tail -n5 text_all.txt > text_cut.txt;mv text_cut.txt text.txt; done
 	-kill $$(cat /tmp/.X99-lock)
-	-docker stop xfce-test-travis
-	-docker rm xfce-test-travis
+	-podman stop xfce-test-travis
+	-podman rm xfce-test-travis
 	-killall -q ffmpeg ffplay
 
 # internal function - call screenshots instead
 do-screenshots:
-	docker exec --tty xfce-test bash -c "cd /data/behave; behave -i screenshots"
-	docker exec --tty xfce-test bash -c "cat ~xfce-test_user/version_info.txt"
-	docker exec xfce-test xfce4-session-logout --logout
+	podman exec --tty xfce-test bash -c "cd /data/behave; behave -i screenshots"
+	podman exec --tty xfce-test bash -c "cat ~xfce-test_user/version_info.txt"
+	podman exec xfce-test xfce4-session-logout --logout
 
 screenshots: test-setup do-screenshots test-teardown
 
 do-language-test:
 	mkdir -p lang-screenshots
 	chmod a+rwx lang-screenshots
-	docker exec --tty xfce-test bash -c "cd /data/lang-screenshots; /data/container_scripts/all_langs.sh"
-	docker exec xfce-test xfce4-session-logout --logout
+	podman exec --tty xfce-test bash -c "cd /data/lang-screenshots; /data/container_scripts/all_langs.sh"
+	podman exec xfce-test xfce4-session-logout --logout
 
 language-test: test-setup do-language-test test-teardown
 

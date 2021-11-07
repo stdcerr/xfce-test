@@ -103,8 +103,8 @@ usage() {
     echo "  command:"
     echo "      start            Start the container for testing"
     echo "                       USE THIS IF YOU ARE NOT SURE"
-    echo "      list             List all docker-tags available online (on hub.docker.com)"
-    echo "      list_local       List all docker-tags available locally (already built or pulled)"
+    echo "      list             List all podman-tags available online (on hub.podman.com)"
+    echo "      list_local       List all podman-tags available locally (already built or pulled)"
     echo "      pull [tag]       Get the latest (or the given) container-tag"
     echo "      no-session       starts the container without a session"
     echo "                       (this is great if you want to test the session itself ;)"
@@ -156,11 +156,11 @@ leave() {
 }
 
 get_tags() {
-  tags=$(curl https://registry.hub.docker.com/v1/repositories/schuellerf/xfce-test/tags)
+  tags=$(curl https://registry.hub.podman.com/v1/repositories/schuellerf/xfce-test/tags)
   echo $tags|jq ".[].name"|tr -d '"'
 }
 get_local_tags() {
-  docker images --format "{{.Tag}}" schuellerf/xfce-test
+  podman images --format "{{.Tag}}" schuellerf/xfce-test
 }
 
 MANUAL_MODES=("start" "no-session" "list" "list_local")
@@ -179,7 +179,7 @@ set +e
 
 # TBD replace by nicer check
 if [ -f /etc/lsb-release ] && grep Ubuntu /etc/lsb-release >/dev/null; then
-  UBUNTU_PACKAGES="xserver-xephyr docker.io xvfb ffmpeg jq curl"
+  UBUNTU_PACKAGES="xserver-xephyr podman.io xvfb ffmpeg jq curl"
 
   for package in ${UBUNTU_PACKAGES}; do
     if ! apt list --installed 2>/dev/null|grep "^$package" >/dev/null; then
@@ -251,7 +251,7 @@ else
 
     echo ""
     echo "  -- Commands only for interactive mode"
-    echo "      tag              changes docker \"TAG\" to work with (default: $TAG)"
+    echo "      tag              changes podman \"TAG\" to work with (default: $TAG)"
     echo "      XFSM_VERBOSE     change verbosity of xfce4-session"
     echo "      LANG             change the language for the session (default: $LANG)"
     echo "      LOG              change the logfile (default: $LOG)"
@@ -278,7 +278,7 @@ else
                 echo "Locally you have:"
                 echo $(get_local_tags)
                 echo "---"
-                echo "Now, pull from docker hub: "
+                echo "Now, pull from podman hub: "
 
                 PS3_TMP=$PS3
                 PS3="Pull tag number: "
@@ -321,7 +321,7 @@ else
             ;;
             "LANG")
                 # getting all languages with title out of the container
-                ALL_LANGS="$(docker run --rm schuellerf/xfce-test:$TAG locale -av |
+                ALL_LANGS="$(podman run --rm schuellerf/xfce-test:$TAG locale -av |
                    awk '$1 == "locale:" { loc=$2 }
                         $1 == "title" {
                                         sub(/^.*\| /, "");
@@ -402,7 +402,7 @@ START_TIME=$(date +%s)
 
 case $mode in
   "pull")
-    docker pull schuellerf/xfce-test:${TAG}
+    podman pull schuellerf/xfce-test:${TAG}
     leave 0
   ;;
 
@@ -422,7 +422,7 @@ case $mode in
   "build_list")
     echo "---"
     echo "All TAGs you can build:"
-    ls dockerfiles/Dockerfile-* | awk 'match($0, ".*Dockerfile-(.+)", r) {print r[1]}'
+    ls podmanfiles/Dockerfile-* | awk 'match($0, ".*Dockerfile-(.+)", r) {print r[1]}'
     leave 0
   ;;
 
@@ -430,11 +430,11 @@ case $mode in
         echo "You are building the container: $TAG"
         echo "DOWNLOAD_DATE is set to ${DOWNLOAD_DATE}"
         echo "Output of the build is written to ${LOG}"
-        docker build --build-arg TAG --build-arg TRAVIS --build-arg PARALLEL_BUILDS --build-arg DOWNLOAD_DATE --tag schuellerf/xfce-test:$TAG --file dockerfiles/Dockerfile-${TAG} . > ${LOG}
-        docker tag schuellerf/xfce-test:${TAG} schuellerf/xfce-test:${TAG}-${DOWNLOAD_DATE}
+        podman build --build-arg TAG --build-arg TRAVIS --build-arg PARALLEL_BUILDS --build-arg DOWNLOAD_DATE --tag schuellerf/xfce-test:$TAG --file podmanfiles/Dockerfile-${TAG} . > ${LOG}
+        podman tag schuellerf/xfce-test:${TAG} schuellerf/xfce-test:${TAG}-${DOWNLOAD_DATE}
         echo ""
         echo "Build summary of components:" | tee -a ${LOG}
-        docker run --rm schuellerf/xfce-test:$TAG cat /home/xfce-test_user/version_info.txt | tee -a ${LOG}
+        podman run --rm schuellerf/xfce-test:$TAG cat /home/xfce-test_user/version_info.txt | tee -a ${LOG}
         leave 0
     ;;
 esac
@@ -454,12 +454,12 @@ if [ $mode != "call" ]; then
 fi
 
 if [ -z "$KEEP" ]; then
-  docker rm "${CONTAINER_NAME}" 2>/dev/null
+  podman rm "${CONTAINER_NAME}" 2>/dev/null
   echo ""
 
 else
   # check if the container already exists
-  if [ "$(docker ps -a --filter "name=${CONTAINER_NAME}" --format "{{.Names}}")" == "${CONTAINER_NAME}" ]; then
+  if [ "$(podman ps -a --filter "name=${CONTAINER_NAME}" --format "{{.Names}}")" == "${CONTAINER_NAME}" ]; then
     RESUME=1
   else
     unset RESUME
@@ -493,7 +493,7 @@ if [ -n "$DETACH" ]; then
     echo -n "Starting container: "
 fi
 if [ -z "$RESUME" ]; then
-  docker run --name "${CONTAINER_NAME}" $DETACH $DOCKER_MODES \
+  podman run --name "${CONTAINER_NAME}" $DETACH $DOCKER_MODES \
              --cap-add=SYS_PTRACE \
 	           --security-opt seccomp=unconfined \
              --env DISPLAY=":${DISPLAY_NUM}" \
@@ -507,40 +507,40 @@ if [ -z "$RESUME" ]; then
              --volume /tmp/.X11-unix:/tmp/.X11-unix:z \
              schuellerf/xfce-test:$TAG $COMMAND 
 else
-  docker start ${RESUME_MODE} ${CONTAINER_NAME} ${COMMAND}
+  podman start ${RESUME_MODE} ${CONTAINER_NAME} ${COMMAND}
 fi
 
 if [ -n "$DETACH" ]; then
     sleep 3 # give ldtp and the session some time
     if [ $mode == "screenshots" ]; then
-        docker exec --tty --interactive "${CONTAINER_NAME}" /container_scripts/make_screenshots.py
+        podman exec --tty --interactive "${CONTAINER_NAME}" /container_scripts/make_screenshots.py
     elif [ $mode == "behave" ]; then
-        docker exec --tty --interactive "${CONTAINER_NAME}" bash -c "cd /behave_tests; GUI_TIMEOUT=120 behave"
+        podman exec --tty --interactive "${CONTAINER_NAME}" bash -c "cd /behave_tests; GUI_TIMEOUT=120 behave"
     elif [ $mode == "behavevideo" ]; then
-        docker exec --tty --interactive "${CONTAINER_NAME}" /container_scripts/run_behave_recorded.sh
+        podman exec --tty --interactive "${CONTAINER_NAME}" /container_scripts/run_behave_recorded.sh
     elif [ $mode == "fulltestvideo" ]; then
-        docker exec --tty --interactive "${CONTAINER_NAME}" /container_scripts/full_test_video.sh
+        podman exec --tty --interactive "${CONTAINER_NAME}" /container_scripts/full_test_video.sh
     else
-        docker exec --tty --interactive "${CONTAINER_NAME}" bash -c 'echo "This container includes:";
+        podman exec --tty --interactive "${CONTAINER_NAME}" bash -c 'echo "This container includes:";
             cat ~xfce-test_user/version_info.txt;
             echo "You might want to call \"tmux attach\" if you know what tmux ( https://tmux.github.io ) is and need to go to the internals."'
-        docker exec --tty --interactive "${CONTAINER_NAME}" /bin/bash
+        podman exec --tty --interactive "${CONTAINER_NAME}" /bin/bash
     fi
 fi
 
 # Copy out the debug file if it exists
-docker cp "${CONTAINER_NAME}":/home/xfce-test_user/.xfce4-session.verbose-log . 2>/dev/null|| echo ""
+podman cp "${CONTAINER_NAME}":/home/xfce-test_user/.xfce4-session.verbose-log . 2>/dev/null|| echo ""
 
 # Tear down
 if [ $mode != "no-session" ] && [ $mode != "call" ]; then
-    docker exec "${CONTAINER_NAME}" xfce4-session-logout --logout
+    podman exec "${CONTAINER_NAME}" xfce4-session-logout --logout
 fi
 
 echo -n "Stopping: "
-docker stop "${CONTAINER_NAME}"
+podman stop "${CONTAINER_NAME}"
 if [ -z "$KEEP" ]; then
   echo -n "Removing: "
-  docker rm "${CONTAINER_NAME}"
+  podman rm "${CONTAINER_NAME}"
 fi
 
 if [ $mode != "call" ]; then

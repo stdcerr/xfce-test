@@ -19,7 +19,7 @@ Other distributions and versions will be supported at a later stage!
 
 # Flavors
 
-There are some flavors available (see the dockerfiles/ directory) which mainly destinguish between the base container.
+There are some flavors available (see the podmanfiles/ directory) which mainly destinguish between the base container.
 
 The special tags are described here:
 
@@ -42,7 +42,7 @@ The tests are run automatically by [travis](https://travis-ci.org/schuellerf/xfc
 
 # Architecture
 
-This test is set-up as a docker container which is displaying it's X11 content on a Xephyr instance on your screen.
+This test is set-up as a podman container which is displaying it's X11 content on a Xephyr instance on your screen.
 
 The first process to be started is [LDTP](https://ldtp.freedesktop.org/wiki/)
 As "toolkit-accessibility" is activated (see Dockerfile) LDTP provides an XMLRPC port to run automated tests.
@@ -56,7 +56,7 @@ xfce-test start
 
 # Preparations
 
-either "read" the `xfce-test` script :) or at least assure docker and Xephyr to be on-board
+either "read" the `xfce-test` script :) or at least assure podman and Xephyr to be on-board
 
 For ubuntu those prerequisites are automatically installed by `xfce-test`
 
@@ -77,7 +77,7 @@ To see the container in action and play around with the "master" versions of XFC
 
 # Tests
 
-To inspect stuff inside the docker to help create more tests you might want to start `sniff` which will help you identify the windows and buttons for LDTP.
+To inspect stuff inside the podman to help create more tests you might want to start `sniff` which will help you identify the windows and buttons for LDTP.
 
 # Building
 
@@ -129,7 +129,7 @@ So when you started the container with `xfce-test start` or `xfce-test no-sessio
 As the applications of the container are built from source _all_ developer packages and many developer tools are pre-installed. Also the sourcecode is available in the folder `/git` within the container
 
 ## Examples
-An advanced example if you want to check a command in all docker images you have locally:
+An advanced example if you want to check a command in all podman images you have locally:
 ```
 xfce-test list_local|xargs -n1 -I XYZ bash -c "TAG=XYZ xfce-test call apt search gtk-3-dev 2>&1 | egrep gtk-3\|working ; echo '----' "
 ```
