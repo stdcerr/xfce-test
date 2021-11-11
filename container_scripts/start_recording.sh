@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-RESOLUTION=${RESOLUTION:-800x600}
+RESOLUTION=${RESOLUTION:-1366x768}
 DATE=$(date +%s_%Y%m%d_%H%M%S)
 OVERLAY_FILE=${OVERLAY_FILE:-/tmp/video.txt}
 VIDEO_PREFIX=${VIDEO_PREFIX:-xfce-test_video_}

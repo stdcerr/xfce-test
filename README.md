@@ -12,7 +12,7 @@ The main usecases are:
    translation artefacts and highlighting them within a scenario
    (this functionality is not yet usable)
 
-The automatically created videos are on [my youtube channel](https://www.youtube.com/user/schuellerf) for now.
+The automatically created videos are on [my youtube channel](https://www.youtube.com/user/stdcerr) for now.
 
 This containers are based on ubuntu with a build from git sources of all core Xfce components + some apps for testing.
 Other distributions and versions will be supported at a later stage!
@@ -34,11 +34,11 @@ Dockerfile-devel really builds "master" so the latest source available
 
 # Travis
 
-The tests are run automatically by [travis](https://travis-ci.org/schuellerf/xfce-test).
+The tests are run automatically by [travis](https://travis-ci.org/stdcerr/xfce-test).
 
 :white_check_mark: Those test are usually errored or failed as we are building _master_ of the xfce repositories. A more stable branch will follow.
 
-[![Build Status](https://travis-ci.org/schuellerf/xfce-test.svg?branch=master)](https://travis-ci.org/schuellerf/xfce-test)
+[![Build Status](https://travis-ci.org/stdcerr/xfce-test.svg?branch=master)](https://travis-ci.org/stdcerr/xfce-test)
 
 # Architecture
 
@@ -66,7 +66,7 @@ There is no direct _need_ to install XFCE Test but for convenience you can insta
 
 If you did not clone all the source code of xfce-test already you can boot-strap easily with:
 ```
-curl --fail --location -o /tmp/xfce-test https://github.com/schuellerf/xfce-test/raw/master/xfce-test && chmod u+x /tmp/xfce-test && /tmp/xfce-test install
+curl --fail --location -o /tmp/xfce-test https://github.com/stdcerr/xfce-test/raw/master/xfce-test && chmod u+x /tmp/xfce-test && /tmp/xfce-test install
 ```
 
 # Usage

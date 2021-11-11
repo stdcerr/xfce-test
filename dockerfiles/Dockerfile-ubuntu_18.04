@@ -88,7 +88,7 @@ RUN sudo mkdir /git && sudo chown xfce-test_user /git
 
 # Rather use my patched version
 RUN cd git \
- && git clone -b python3 https://github.com/schuellerf/ldtp2.git \
+ && git clone -b python3 https://github.com/stdcerr/ldtp2.git \
  && cd ldtp2 \
  && sudo python setup.py install
 

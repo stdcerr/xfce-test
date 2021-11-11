@@ -8,7 +8,7 @@ PARALLEL_BUILDS=${PARALLEL_BUILDS:-0}
 TRAVIS=${TRAVIS:-FALSE}
 
 is_my_git() {
-  if git remote -v 2>/dev/null|grep "schuellerf/xfce-test" &>/dev/null; then
+  if git remote -v 2>/dev/null|grep "stdcerr/xfce-test" &>/dev/null; then
     return 0
   else
     return 1
@@ -48,7 +48,7 @@ complete -F _xfce-test_completions xfce-test
       $RUN_AS cp $0 ${INSTALL_TARGET}
     else
       echo "Trying to get the latest version"
-      $RUN_AS curl -o ${INSTALL_TARGET} https://raw.githubusercontent.com/schuellerf/xfce-test/master/xfce-test || echo "... well I tried to."
+      $RUN_AS curl -o ${INSTALL_TARGET} https://raw.githubusercontent.com/stdcerr/xfce-test/master/xfce-test || echo "... well I tried to."
       $RUN_AS chmod u+x ${INSTALL_TARGET}
     fi
 
@@ -156,11 +156,11 @@ leave() {
 }
 
 get_tags() {
-  tags=$(curl https://registry.hub.podman.com/v1/repositories/schuellerf/xfce-test/tags)
+  tags=$(curl https://registry.hub.podman.com/v1/repositories/stdcerr/xfce-test/tags)
   echo $tags|jq ".[].name"|tr -d '"'
 }
 get_local_tags() {
-  podman images --format "{{.Tag}}" schuellerf/xfce-test
+  podman images --format "{{.Tag}}" stdcerr/xfce-test
 }
 
 MANUAL_MODES=("start" "no-session" "list" "list_local")
@@ -321,7 +321,7 @@ else
             ;;
             "LANG")
                 # getting all languages with title out of the container
-                ALL_LANGS="$(podman run --rm schuellerf/xfce-test:$TAG locale -av |
+                ALL_LANGS="$(podman run --rm stdcerr/xfce-test:$TAG locale -av |
                    awk '$1 == "locale:" { loc=$2 }
                         $1 == "title" {
                                         sub(/^.*\| /, "");
@@ -402,7 +402,7 @@ START_TIME=$(date +%s)
 
 case $mode in
   "pull")
-    podman pull schuellerf/xfce-test:${TAG}
+    podman pull stdcerr/xfce-test:${TAG}
     leave 0
   ;;
 
@@ -430,11 +430,11 @@ case $mode in
         echo "You are building the container: $TAG"
         echo "DOWNLOAD_DATE is set to ${DOWNLOAD_DATE}"
         echo "Output of the build is written to ${LOG}"
-        podman build --build-arg TAG --build-arg TRAVIS --build-arg PARALLEL_BUILDS --build-arg DOWNLOAD_DATE --tag schuellerf/xfce-test:$TAG --file podmanfiles/Dockerfile-${TAG} . > ${LOG}
-        podman tag schuellerf/xfce-test:${TAG} schuellerf/xfce-test:${TAG}-${DOWNLOAD_DATE}
+        podman build --build-arg TAG --build-arg TRAVIS --build-arg PARALLEL_BUILDS --build-arg DOWNLOAD_DATE --tag stdcerr/xfce-test:$TAG --file podmanfiles/Dockerfile-${TAG} . > ${LOG}
+        podman tag stdcerr/xfce-test:${TAG} stdcerr/xfce-test:${TAG}-${DOWNLOAD_DATE}
         echo ""
         echo "Build summary of components:" | tee -a ${LOG}
-        podman run --rm schuellerf/xfce-test:$TAG cat /home/xfce-test_user/version_info.txt | tee -a ${LOG}
+        podman run --rm stdcerr/xfce-test:$TAG cat /home/xfce-test_user/version_info.txt | tee -a ${LOG}
         leave 0
     ;;
 esac
@@ -505,7 +505,7 @@ if [ -z "$RESUME" ]; then
              --env PARALLEL_BUILDS \
              --volume ${PWD}:/data \
              --volume /tmp/.X11-unix:/tmp/.X11-unix:z \
-             schuellerf/xfce-test:$TAG $COMMAND 
+             stdcerr/xfce-test:$TAG $COMMAND 
 else
   podman start ${RESUME_MODE} ${CONTAINER_NAME} ${COMMAND}
 fi

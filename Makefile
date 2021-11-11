@@ -29,7 +29,7 @@ compile-local: check_env xephyr
               --env DISPLAY=":$(DISPLAY_NUM)" \
               --env SCREENSHOTS=$(SCREENSHOTS) \
               --volume /tmp/.X11-unix:/tmp/.X11-unix --volume $(SRC_DIR):/data \
-              schuellerf/xfce-test:latest /bin/bash
+              stdcerr/xfce-test:latest /bin/bash
 
 # see compile-local
 # this starts as root to be able to install stuff with apt
@@ -39,7 +39,7 @@ compile-local-root: check_env xephyr
               --env DISPLAY=":$(DISPLAY_NUM)" \
               --env SCREENSHOTS=$(SCREENSHOTS) \
               --volume /tmp/.X11-unix:/tmp/.X11-unix --volume $(SRC_DIR):/data \
-              schuellerf/xfce-test:latest /bin/bash
+              stdcerr/xfce-test:latest /bin/bash
 
 test: behave-tests
 
@@ -56,10 +56,10 @@ xephyr:
 	Xephyr :$(DISPLAY_NUM) -ac -screen $(RESOLUTION) &
 
 pull:
-	podman pull schuellerf/xfce-test
+	podman pull stdcerr/xfce-test
 
 build:
-	podman build --build-arg DOWNLOAD_DATE=$(shell date +%Y%m%d) --tag schuellerf/xfce-test:latest .
+	podman build --build-arg DOWNLOAD_DATE=$(shell date +%Y%m%d) --tag stdcerr/xfce-test:latest .
 
 test-setup: xephyr
 	-podman rm xfce-test
@@ -69,7 +69,7 @@ test-setup: xephyr
               --env SCREENSHOTS=$(SCREENSHOTS) \
 	      --volume $(shell pwd):/data \
               --volume /tmp/.X11-unix:/tmp/.X11-unix:z \
-              schuellerf/xfce-test:latest
+              stdcerr/xfce-test:latest
 
 test-teardown:
 	-podman exec xfce-test xfce4-session-logout --logout
@@ -103,7 +103,7 @@ $(FFPLAY_CMD):
 
 recording-test: $(FFMPEG_CMD) $(FFPLAY_CMD)
 	Xvfb :99 -ac -screen 0 800x600x24 &
-	podman run --name xfce-test-travis --detach --env DISPLAY=:99.0 --volume /tmp/.X11-unix:/tmp/.X11-unix schuellerf/xfce-test:latest /usr/bin/dbus-run-session /usr/bin/ldtp
+	podman run --name xfce-test-travis --detach --env DISPLAY=:99.0 --volume /tmp/.X11-unix:/tmp/.X11-unix stdcerr/xfce-test:latest /usr/bin/dbus-run-session /usr/bin/ldtp
 	sleep 5
 	echo "Starting testframework..." > text.txt
 ifdef DEBUG
